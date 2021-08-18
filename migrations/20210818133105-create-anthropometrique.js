@@ -8,7 +8,28 @@ module.exports = {
         primaryKey: true,
         type: Sequelize.INTEGER
       },
-      id_patient: {
+      peri_craninen: {
+        type: Sequelize.FLOAT
+      },
+      peri_brachail: {
+        type: Sequelize.FLOAT
+      },
+      poids: {
+        type: Sequelize.FLOAT
+      },
+      taille: {
+        type: Sequelize.FLOAT
+      },
+      type_malnutrition: {
+        type: Sequelize.STRING
+      },
+      date_examen: {
+        type: Sequelize.DATE
+      },
+      id_patien: {
+        type: Sequelize.STRING
+      },
+      id_anthro: {
         type: Sequelize.STRING
       },
       createdAt: {
