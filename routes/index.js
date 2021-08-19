@@ -7,7 +7,7 @@ const {
     editUser,
     viewUserById,
     destroyUser,
-    login
+    postLogin
 } = require('../controller/controllerUser');
 
 
@@ -21,7 +21,7 @@ const router = (app) => {
         .delete(destroyUser);
     
     app.route('/user_login')
-    .post(login)
+    .post(postLogin)
 }
 
     ;

@@ -1,10 +1,14 @@
 // const db = require("../models");
 const db = require('../utils');
-const bcrypt = require('bcrypt')
-const uuid = require('uuidv4')
-const User = require("../models/user");
+const faker = require('faker');
+const bcrypt = require('bcrypt');
+const uuidv4 = require('uuidv4');
+// const { v4: uuidv4 } = require("uuid");
+
 const jwt = require('jsonwebtoken')
-const { compare } = require('bcrypt')
+const { compare } = require('bcrypt');
+const User = require("../models/user");
+
 
 async function hasUser(pwd) {
     const salt = await bcrypt.genSalt(10);
@@ -25,35 +29,25 @@ async function createUser(req, res) {
         status,
         avatar } = req.body;
 
-    res.send().status(200);
     const newUser = new User(
         {
-            id_user,
-            prenom_user,
-            nom_user,
-            postnom_user,
             email,
-            password: bcrypt.hashSync(password, 10),
+            avatar,
             status,
-            avatar
-        })
-    const savedUser = await newUser.save().catch(err => {
-        console.log("error:", err);
-        res.status(500).json({ error: "cannont register " });
-    })
-    // db.sync().then((result) => {
-    //     return User.create({
-    //         id_user: id_user,
-    //         prenom_user: prenom_user,
-    //         nom_user: nom_user,
-    //         postnom_user: postnom_user,
-    //         email: email,
-    //         password: hasUser(password),
-    //         status: status,
-    //         avatar: avatar
-    //     })
+            id_user,
+            nom_user,
+            prenom_user,
+            postnom_user,
+            password: bcrypt.hashSync(password, 10),
 
-    // }).catch(error => console.log(error))
+        })
+    const savedUser = await newUser
+        .save()
+        .then(res => { res.status(200).json({ message: "register succes" }) })
+        .catch(err => {
+            console.log("error:", err);
+            res.status(500).json({ error: "cannont register " + err });
+        })
 }
 
 async function viewUser(req, res) {
@@ -122,35 +116,45 @@ async function editUser(req, res) {
 }
 
 
-async function login(req, res) {
+async function postLogin(req, res) {
     const {
         email,
         password } = req.body;
-    const userWithEmail = await User.findOne({ where: { email } })
-        .catch((err) => {
-            console.log("error:", err)
-        })
 
-    if (!userWithEmail) {
-        return res.status(400).json({ message: "Email or password does not match!" })
+    try {
+
+        const userWithEmail = await User.findOne({ where: { email } });
+
+        console.log(userWithEmail);
+
+        if (!userWithEmail) {
+            return res.
+                status(400).
+                json({ message: "Email or password does not match!" });
+        }
+        const isPasswordValid = await compare(password, userWithEmail.password);
+
+        if (!isPasswordValid) {
+            return res.
+                status(400).
+                json({ message: "Email or password does not match!" });
+        }
+        const jwtToken = jwt.sign(
+            { id: userWithEmail.id_user },
+            process.env.JWT_SECRET
+        );
+        return res.json({ message: "Welcome Back!", token: jwtToken });
+
+    } catch (error) {
+        return res.send({ message: "error ", error }).status(500)
     }
-    const isPasswordValid = await compare(password, userWithEmail.password);
-
-    if (!isPasswordValid) {
-        return res.status(400).json({ message: "Email or password does not match!" })
-
-    }
-    const jwtTokens = jwt.sign(
-        { id: userWithEmail.id_user }
-    )
-
 }
 
 module.exports = {
     viewUser: viewUser,
     editUser: editUser,
+    postLogin: postLogin,
     createUser: createUser,
     destroyUser: destroyUser,
-    viewUserById: viewUserById,
-    login: login
+    viewUserById: viewUserById
 }
