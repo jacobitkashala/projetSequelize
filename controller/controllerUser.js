@@ -1,51 +1,156 @@
 // const db = require("../models");
-const db = require("../utils");
-const { QueryTypes } = require('sequelize');
+const db = require('../utils');
+const bcrypt = require('bcrypt')
+const uuid = require('uuidv4')
+const User = require("../models/user");
+const jwt = require('jsonwebtoken')
+const { compare } = require('bcrypt')
 
-const modelUser= require("../models");
+async function hasUser(pwd) {
+    const salt = await bcrypt.genSalt(10);
 
-async function allUser(req, res) {
+    return bcrypt.hash(pwd, salt);
 
-
-    res.status(200).send({ message: "ok" })
-    db.
-        sync({ force: true })
-        .then((result) => {
-           return modelUser.create({ id_user: 2,
-             prenom_user: "kashala",
-              nom_user: "jaco",
-               postnom_user: "mukendi",
-                email: "mukendi@gmail.com", 
-                password: "1234", 
-                status: "medecin",
-                 avatar: "avatar" })
-        }).then(user=>{
-            console.log("fist user",user);
-        }).catch((err)=>{console.log(err)})
 }
 
-function viewOneUser(req, res) {
-    console.log('Viewing ' + req.params.id);
+
+async function createUser(req, res) {
+    const {
+        id_user,
+        prenom_user,
+        nom_user,
+        postnom_user,
+        email,
+        password,
+        status,
+        avatar } = req.body;
+
+    res.send().status(200);
+    const newUser = new User(
+        {
+            id_user,
+            prenom_user,
+            nom_user,
+            postnom_user,
+            email,
+            password: bcrypt.hashSync(password, 10),
+            status,
+            avatar
+        })
+    const savedUser = await newUser.save().catch(err => {
+        console.log("error:", err);
+        res.status(500).json({ error: "cannont register " });
+    })
+    // db.sync().then((result) => {
+    //     return User.create({
+    //         id_user: id_user,
+    //         prenom_user: prenom_user,
+    //         nom_user: nom_user,
+    //         postnom_user: postnom_user,
+    //         email: email,
+    //         password: hasUser(password),
+    //         status: status,
+    //         avatar: avatar
+    //     })
+
+    // }).catch(error => console.log(error))
 }
 
-function createUser(req, res) {
-    console.log('Todo created')
+async function viewUser(req, res) {
+    User
+        .findAll()
+        .then(users => res.send(users))
+        .catch((err) => console.log(err))
 }
 
-function destroyUser(req, res) {
-    console.log('Todo deleted')
+async function viewUserById(req, res) {
+    const id_user = req.params.id;
+    console.log(id_user)
+
+    try {
+        const user = await User.findOne({ where: { id_user } });
+        return res.json(user);
+    } catch (err) {
+        console.log(err)
+    }
+
 }
 
-function editUSer(req, res) {
-    console.log('Todo ' + req.params.id + ' updated')
+async function destroyUser(req, res) {
+    const id_user = req.params.id;
+    console.log(id_user)
+    try {
+        const user = await User.findOne({ where: { id_user } });
+        await user.destroy()
+        return res.send({ message: "suppression" }).status(200);
+    } catch (err) {
+        console.log(err)
+        return res.send({ message: err }).status(500)
+
+    }
+}
+
+async function editUser(req, res) {
+    const id_user = req.params.id;
+    const {
+        prenom_user,
+        nom_user,
+        postnom_user,
+        email,
+        password,
+        status,
+        avatar } = req.body;
+
+    try {
+        const user = await User.findOne({ where: { id_user: id_user } })
+        user.id_user = id_user;
+        user.email = email;
+        user.status = status;
+        user.avatar = avatar;
+        user.nom_user = nom_user;
+        user.password = password;
+        user.prenom_user = prenom_user;
+        user.postnom_user = postnom_user;
+
+        await user.save()
+        return res.send({ message: "mise a jour" }).status(200);
+
+    } catch (err) {
+        console.log(err)
+        return res.send({ message: err }).status(500)
+    }
+}
+
+
+async function login(req, res) {
+    const {
+        email,
+        password } = req.body;
+    const userWithEmail = await User.findOne({ where: { email } })
+        .catch((err) => {
+            console.log("error:", err)
+        })
+
+    if (!userWithEmail) {
+        return res.status(400).json({ message: "Email or password does not match!" })
+    }
+    const isPasswordValid = await compare(password, userWithEmail.password);
+
+    if (!isPasswordValid) {
+        return res.status(400).json({ message: "Email or password does not match!" })
+
+    }
+    const jwtTokens = jwt.sign(
+        { id: userWithEmail.id_user }
+    )
+
 }
 
 module.exports = {
-    editUSer: editUSer,
-    allUser: allUser,
-    viewOneUser: viewOneUser,
+    viewUser: viewUser,
+    editUser: editUser,
+    createUser: createUser,
     destroyUser: destroyUser,
-    createUser: createUser
-
-
+    viewUserById: viewUserById,
+    login: login
 }
