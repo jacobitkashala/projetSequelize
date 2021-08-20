@@ -42,9 +42,9 @@ async function createUser(req, res) {
             password: bcrypt.hashSync(password, 10),
 
         })
-    const savedUser = await newUser
+    // const savedUser =
+     await newUser
         .save()
-        .then(res => { res.status(200).json({ message: "register succes" }) })
         .catch(err => {
             console.log("error:", err);
             res.status(500).json({ error: "cannont register " + err });
