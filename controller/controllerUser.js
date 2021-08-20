@@ -3,6 +3,7 @@ const db = require('../utils');
 const faker = require('faker');
 const bcrypt = require('bcrypt');
 const uuidv4 = require('uuidv4');
+ 
 // const { v4: uuidv4 } = require("uuid");
 
 const jwt = require('jsonwebtoken')
@@ -128,19 +129,15 @@ async function postLogin(req, res) {
         console.log(userWithEmail);
 
         if (!userWithEmail) {
-            return res.
-                status(400).
-                json({ message: "Email or password does not match!" });
+            return res.status(400). json({ message: "Email or password does not match!" });
         }
         const isPasswordValid = await compare(password, userWithEmail.password);
 
         if (!isPasswordValid) {
-            return res.
-                status(400).
-                json({ message: "Email or password does not match!" });
+            return res.status(400).json({ message: "Email or password does not match!" });
         }
         const jwtToken = jwt.sign(
-            { id: userWithEmail.id_user },
+            { id: userWithEmail.id_user,email:userWithEmail.email },
             process.env.JWT_SECRET
         );
         return res.json({ message: "Welcome Back!", token: jwtToken });

@@ -1,5 +1,5 @@
 const { testConnection,
-    destroy } = require('../controller/controllerFamille');
+    destroy } = require('../controller/controllerFamily');
 
 const {
     createUser,

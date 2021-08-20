@@ -1,15 +1,6 @@
-// const db = require("../models");
-const db = require("../utils");
+const db = require('../utils');
+const Family = require("../models/family");
 
-
-const testConnection = () => {
-    try {
-        db.authenticate();
-        console.log('Connection has been established successfully.');
-    } catch (error) {
-        console.error('Unable to connect to the database:', error);
-    }
-}
 
 function All(req, res) {
     res.send('All todos')
@@ -32,7 +23,6 @@ function edit(req, res) {
 }
 
 module.exports = {
-    testConnection: testConnection,
     edit: edit,
     destroy:destroy
 }
